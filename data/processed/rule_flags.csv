@@ -1,0 +1,112 @@
+employee_id,date,timestamp,rule_name,severity,evidence
+aisha.kim,2026-09-14,2026-09-14 03:29:18,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+aisha.moore,2026-09-14,2026-09-14 02:40:36,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+aisha.moore,2026-10-09,2026-10-09 08:33:00,new_device_foreign_login,Low,successful login: new device dev-e103-l2
+alex.brown,2026-09-14,2026-09-14 02:28:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+amara.garcia,2026-09-14,2026-09-14 02:14:17,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+chen.chavez,2026-09-14,2026-09-14 02:35:53,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+chen.davis,2026-09-14,2026-09-14 02:22:27,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+chen.davis,2026-10-06,2026-10-06 01:40:00,brute_force,High,13 failed logins in 4 min from 198.51.100.150; successful login followed
+chen.davis,2026-10-06,2026-10-06 01:46:00,impossible_travel,High,"Dallas -> Lagos: 10,557 km in 634 min (999 km/h)"
+chen.davis,2026-10-06,2026-10-06 01:46:00,new_device_foreign_login,High,successful login: new device dev-new-8841; login from NG (usual: US)
+chen.davis,2026-10-06,2026-10-06 01:55:32,bulk_download,High,"273 downloads (2,412 MB, 273 sensitive) in 2.0 h"
+chen.davis,2026-10-06,2026-10-06 04:00:00,usb_exfiltration,High,271 MB sent out (3 email_external); 3 restricted/secret; 3 after hours
+chen.davis,2026-10-06,2026-10-06 07:35:00,impossible_travel,High,"Lagos -> Dallas: 10,557 km in 349 min (1,815 km/h)"
+chen.khan,2026-09-14,2026-09-14 02:41:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+daniel.ali,2026-09-14,2026-09-14 02:24:20,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+daniel.okafor,2026-09-14,2026-09-14 02:39:52,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+daniel.rivera,2026-09-14,2026-09-14 02:11:22,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+daniel.torres,2026-09-14,2026-09-14 02:15:22,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+diego.moore,2026-09-14,2026-09-14 02:16:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+ethan.singh,2026-09-14,2026-09-14 02:49:35,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+fatima.kim,2026-09-14,2026-09-14 02:12:56,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+fatima.wilson,2026-09-14,2026-09-14 02:35:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+fatima.young,2026-09-14,2026-09-14 02:47:54,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+grace.garcia,2026-09-14,2026-09-14 02:29:43,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+grace.martinez,2026-09-14,2026-09-14 02:46:25,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+grace.patel,2026-09-14,2026-09-14 02:45:10,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+hannah.ahmed,2026-09-14,2026-09-14 02:19:09,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+hannah.garcia,2026-09-14,2026-09-14 02:18:42,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+hannah.khan,2026-09-14,2026-09-14 02:23:03,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+hannah.torres,2026-09-14,2026-09-14 02:26:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+isabel.brown,2026-09-14,2026-09-14 03:09:32,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+isabel.chavez,2026-09-14,2026-09-14 02:48:28,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+isabel.martinez,2026-09-14,2026-09-14 03:18:49,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+isabel.patel,2026-09-14,2026-09-14 02:26:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+isabel.wilson,2026-09-14,2026-09-14 03:08:13,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+james.davis,2026-10-28,2026-10-28 13:20:23,bulk_download,High,"148 downloads (823 MB, 147 sensitive) in 6.4 h"
+james.davis,2026-10-28,2026-10-28 19:39:00,usb_exfiltration,High,"2,518 MB sent out (3 usb_copy); 3 restricted/secret; 3 after hours"
+james.hall,2026-09-14,2026-09-14 02:14:23,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+james.martinez,2026-09-14,2026-09-14 02:23:50,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+james.moore,2026-09-14,2026-09-14 02:58:36,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+kofi.lee,2026-10-12,2026-10-12 09:17:13,bulk_download,Medium,"28 downloads (55 MB, 25 sensitive) in 14.5 h"
+kofi.lee,2026-10-12,2026-10-12 21:36:00,usb_exfiltration,High,"1,418 MB sent out (2 usb_copy); 0 restricted/secret; 2 after hours"
+kofi.lee,2026-10-13,2026-10-13 20:09:44,bulk_download,Medium,"28 downloads (74 MB, 28 sensitive) in 3.5 h"
+kofi.lee,2026-10-14,2026-10-14 08:23:55,bulk_download,Medium,"33 downloads (84 MB, 32 sensitive) in 15.2 h"
+kofi.lee,2026-10-15,2026-10-15 08:01:43,bulk_download,Medium,"38 downloads (104 MB, 36 sensitive) in 15.7 h"
+kofi.lee,2026-10-15,2026-10-15 21:31:05,usb_exfiltration,High,"1,334 MB sent out (2 usb_copy); 0 restricted/secret; 2 after hours"
+kofi.lee,2026-10-16,2026-10-16 08:38:26,bulk_download,Medium,"40 downloads (124 MB, 40 sensitive) in 15.0 h"
+kofi.lee,2026-10-16,2026-10-16 23:21:51,usb_exfiltration,High,"2,978 MB sent out (1 cloud_upload); 1 restricted/secret; 1 after hours"
+kofi.lee,2026-10-19,2026-10-19 12:34:43,bulk_download,Medium,"45 downloads (150 MB, 45 sensitive) in 11.2 h"
+kofi.lee,2026-10-20,2026-10-20 12:57:37,bulk_download,Medium,"45 downloads (119 MB, 44 sensitive) in 10.8 h"
+kofi.lee,2026-10-20,2026-10-20 22:36:04,usb_exfiltration,High,"3,295 MB sent out (2 usb_copy, 1 cloud_upload); 1 restricted/secret; 3 after hours"
+kofi.lee,2026-10-21,2026-10-21 08:22:00,bulk_download,Medium,"53 downloads (256 MB, 51 sensitive) in 15.3 h"
+kofi.lee,2026-10-22,2026-10-22 20:08:53,bulk_download,Medium,"54 downloads (254 MB, 54 sensitive) in 3.5 h"
+kofi.lee,2026-10-22,2026-10-22 23:01:03,usb_exfiltration,High,"2,161 MB sent out (1 cloud_upload); 1 restricted/secret; 1 after hours"
+kofi.lee,2026-10-23,2026-10-23 11:08:00,bulk_download,Medium,"60 downloads (293 MB, 59 sensitive) in 12.6 h"
+kofi.lee,2026-10-23,2026-10-23 21:01:36,usb_exfiltration,High,"1,633 MB sent out (2 usb_copy); 0 restricted/secret; 2 after hours"
+kofi.lopez,2026-09-14,2026-09-14 02:59:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+kofi.martinez,2026-09-14,2026-09-14 03:11:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+kofi.moore,2026-09-14,2026-09-14 02:45:06,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+kofi.moore,2026-09-30,2026-09-30 08:21:00,bulk_download,High,"103 downloads (336 MB, 103 sensitive) in 5.9 h"
+kofi.smith,2026-09-14,2026-09-14 02:27:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+lena.anderson,2026-09-14,2026-09-14 03:19:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+liam.moore,2026-09-14,2026-09-14 02:54:36,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+liam.smith,2026-09-14,2026-09-14 02:40:10,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+maria.nguyen,2026-09-14,2026-09-14 02:13:41,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+mateo.reyes,2026-09-14,2026-09-14 02:34:36,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+mateo.singh,2026-09-14,2026-09-14 03:08:24,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+mateo.smith,2026-09-14,2026-09-14 02:17:16,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+mei.anderson,2026-09-14,2026-09-14 02:25:50,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+mei.clark,2026-09-14,2026-09-14 02:13:27,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+mei.okafor,2026-09-14,2026-09-14 02:40:52,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+nadia.brown,2026-09-14,2026-09-14 02:13:34,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+nadia.patel,2026-09-14,2026-09-14 03:05:03,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+nadia.scott,2026-09-17,2026-09-17 08:39:47,impossible_travel,Medium,"Denver -> Chicago: 1,478 km in 8 min (10,618 km/h)"
+nadia.scott,2026-09-18,2026-09-18 08:57:18,impossible_travel,Medium,"Chicago -> Denver: 1,478 km in 22 min (4,120 km/h)"
+noah.ali,2026-09-14,2026-09-14 02:39:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+noah.anderson,2026-09-14,2026-09-14 02:25:21,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+noah.johnson,2026-09-14,2026-09-14 02:26:10,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+noah.kim,2026-09-14,2026-09-14 02:11:04,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+noah.reyes,2026-09-14,2026-09-14 02:16:53,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+olivia.kim,2026-09-14,2026-09-14 02:39:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+olivia.martinez,2026-09-14,2026-09-14 02:13:13,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+omar.ahmed,2026-09-14,2026-09-14 02:45:29,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+omar.brown,2026-09-14,2026-09-14 02:53:19,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+priya.ahmed,2026-09-14,2026-09-14 02:18:46,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+priya.white,2026-09-14,2026-09-14 02:26:10,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+raj.ali,2026-09-14,2026-09-14 02:23:19,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+samuel.singh,2026-09-14,2026-09-14 02:33:06,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+sofia.anderson,2026-09-14,2026-09-14 02:16:26,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+sofia.johnson,2026-09-14,2026-09-14 02:24:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+sofia.lopez,2026-09-14,2026-09-14 02:25:49,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+tyler.moore,2026-09-14,2026-09-14 02:21:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+tyler.nguyen,2026-09-14,2026-09-14 02:10:42,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+tyler.okafor,2026-09-14,2026-09-14 02:23:41,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+tyler.okafor,2026-09-22,2026-09-22 03:00:00,brute_force,High,249 failed logins in 25 min from 198.51.100.200 (+1 other IPs)
+tyler.smith,2026-09-14,2026-09-14 02:27:12,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+tyler.taylor,2026-09-14,2026-09-14 02:15:31,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+yuki.lee,2026-09-14,2026-09-14 03:01:43,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+yuki.lopez,2026-09-14,2026-09-14 02:29:13,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+yuki.okafor,2026-09-14,2026-09-14 02:22:00,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+yuki.reyes,2026-09-14,2026-09-14 02:37:28,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+yuki.smith,2026-09-14,2026-09-14 02:42:02,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+yuki.smith,2026-10-19,2026-10-19 09:40:00,impossible_travel,High,"Dallas -> Bucharest: 9,670 km in 36 min (16,117 km/h)"
+yuki.smith,2026-10-19,2026-10-19 09:40:00,new_device_foreign_login,High,successful login: new device dev-new-5120; login from RO (usual: US)
+yuki.smith,2026-10-19,2026-10-19 09:45:08,bulk_download,Medium,"61 downloads (283 MB, 40 sensitive) in 3.4 h"
+yuki.young,2026-09-14,2026-09-14 02:35:32,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+zara.ali,2026-09-14,2026-09-14 02:56:05,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+zara.brown,2026-09-14,2026-09-14 02:36:41,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+zara.johnson,2026-09-14,2026-09-14 02:12:46,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+zara.nguyen,2026-09-14,2026-09-14 02:15:19,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
+zara.taylor,2026-09-14,2026-09-14 02:20:15,credential_stuffing,Medium,198.51.100.77 failed logins against 79 accounts in 89 min
