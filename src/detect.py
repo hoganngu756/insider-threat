@@ -1,18 +1,10 @@
 import pandas as pd
 from sklearn.ensemble import IsolationForest
-
+from src.detection.exfiltration import EXTERNAL_ACTIONS
 
 def build_features(logins: pd.DataFrame, files:pd.DataFrame) -> pd.DataFrame:
-    """Per user per day: failed logins, off-hours logins, new devices, bytes transferred."""
-    
     """
     Build one feature row per user per day.
-
-    Features:
-    - failed_logins
-    - off_hours_logins
-    - new_devices
-    - bytes_transferred
     """
     logins = logins.copy()
     files = files.copy()
@@ -111,7 +103,8 @@ def build_features(logins: pd.DataFrame, files:pd.DataFrame) -> pd.DataFrame:
         files["size_bytes"], errors="coerce"
     ).fillna(0)
 
-    file_upload_actions = ["upload", "cloud_upload"]
+    
+    file_upload_actions = ["upload"]
     file_download_actions = ["download"]
 
     file_uploads = (
@@ -146,6 +139,37 @@ def build_features(logins: pd.DataFrame, files:pd.DataFrame) -> pd.DataFrame:
         .reset_index()
     )
 
+    external_transfers = (
+    files[files["action"].isin(EXTERNAL_ACTIONS)]
+    .groupby(["username", "date"])
+    .size()
+    .rename("external_transfers")
+    .reset_index()
+    )
+
+    bytes_external = (
+    files[files["action"].isin(EXTERNAL_ACTIONS)]
+    .groupby(["username", "date"])["size_bytes"]
+    .sum()
+    .rename("bytes_external")
+    .reset_index()
+    )
+
+
+    files["hour"] = files["timestamp"].dt.hour
+
+    files["is_off_hours"] = (
+        (files["hour"] < 7) | (files["hour"] >= 19)
+    )
+
+    off_hours_file_events = (
+        files[files["is_off_hours"]]
+        .groupby(["username", "date"])
+        .size()
+        .rename("off_hours_file_events")
+        .reset_index()
+    )
+
      # --------------------------------------------------
     # 5. CREATE THE BASE USER-DAY TABLE
     # --------------------------------------------------
@@ -173,7 +197,10 @@ def build_features(logins: pd.DataFrame, files:pd.DataFrame) -> pd.DataFrame:
         file_uploads,
         file_downloads,
         bytes_uploaded,
-        bytes_downloaded
+        bytes_downloaded,
+        external_transfers,
+        bytes_external,
+        off_hours_file_events
     ]
 
     for table in feature_tables:
@@ -193,7 +220,10 @@ def build_features(logins: pd.DataFrame, files:pd.DataFrame) -> pd.DataFrame:
         "file_uploads",
         "file_downloads",
         "bytes_uploaded",
-        "bytes_downloaded"
+        "bytes_downloaded",
+        "external_transfers",
+        "bytes_external",
+        "off_hours_file_events"
     ]
 
     features[feature_columns] = features[feature_columns].fillna(0)
@@ -216,9 +246,26 @@ def build_features(logins: pd.DataFrame, files:pd.DataFrame) -> pd.DataFrame:
 
 
 
-def score(features: pd.DataFrame) -> pd.DataFrame:
-    """Isolation Forest anomaly score + rule-based indicators -> risk score and level."""
+def score(features: pd.DataFrame, contamination: float = 0.02) -> pd.DataFrame:
+    """
+    Calculate anomaly scores and flags using Isolation Forest.
+
+    anomaly_score:
+        Higher values indicate more unusual employee-day activity.
+
+    anomaly_flag:
+        True indicates that an observation was identified as unusual
+        by Isolation Forest. It does not necessarily indicate malicious
+        activity.
+
+    contamination:
+        Expected proportion of anomalies in the dataset.
+        Defaults to 0.02 (2%).
+    """
+    
     if features.empty:
+        features["anomaly_score"] = 0.0
+        features["anomaly_flag"] = False
         return features
 
     features = features.copy()
@@ -232,7 +279,10 @@ def score(features: pd.DataFrame) -> pd.DataFrame:
         "file_uploads",
         "file_downloads",
         "bytes_uploaded",
-        "bytes_downloaded"
+        "bytes_downloaded",
+        "external_transfers",
+        "bytes_external",
+        "off_hours_file_events"
         ]
 
     if len(features) < 2:
@@ -244,7 +294,7 @@ def score(features: pd.DataFrame) -> pd.DataFrame:
     X = features[feature_columns].fillna(0)
 
     model = IsolationForest(
-        contamination=0.02,
+        contamination=contamination,
         random_state=0
     )
 
@@ -259,3 +309,28 @@ def score(features: pd.DataFrame) -> pd.DataFrame:
     )
 
     return features
+
+
+if __name__ == "__main__":
+    from src.detection.load_logs import load_raw
+    from src.detection.clean_columns import split_events
+    import os
+
+    # Load and clean the actual dataset
+    events, report = load_raw("data/mock_data.csv")
+    logins, files, report = split_events(events)
+
+    # Run ML pipeline
+    features = build_features(logins, files)
+    ml_output = score(features)
+
+    # Save results
+    os.makedirs("data/processed", exist_ok=True)
+    ml_output.to_csv(
+        "data/processed/ml_output.csv",
+        index=False
+    )
+
+    print("Employee-day observations:", len(features))
+    print("Anomalies detected:", ml_output["anomaly_flag"].sum())
+    print("ML output saved to data/processed/ml_output.csv")
