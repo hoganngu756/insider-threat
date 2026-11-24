@@ -25,6 +25,11 @@ def combine(flag_frames):
 def build_rule_flags(path="data/mock_data.csv"):
     events, _ = load_raw(path)
     logins, files, _ = split_events(events)
+    return flag_events(logins, files)
+
+
+def flag_events(logins, files):
+    """Run every detector on already-cleaned login and file events."""
     return combine([
         detect_brute_force(logins),
         detect_credential_stuffing(logins),
