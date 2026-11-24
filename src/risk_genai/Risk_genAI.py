@@ -1,6 +1,6 @@
-"""Heuristic Risk Scoring + GenAI Investigation.
+"""Person 3: Heuristic Risk Scoring + GenAI Investigation.
 
-Run: py person3.py
+Run: py Risk_genAI.py
 Input: Person 2's employee-day ML CSV.
 Outputs: outputs/risk_scores.csv, outputs/incidents.csv,
          outputs/ai_investigations.csv
@@ -8,16 +8,20 @@ Outputs: outputs/risk_scores.csv, outputs/incidents.csv,
 
 import json
 import os
+import time
 from pathlib import Path
 
 import pandas as pd
 
 
 # ----------------- SETTINGS -----------------
-INPUT_FILE = "sample_ml_output.csv"    # Change to "ml_output.csv" for real data
+INPUT_FILE = "ml_output.csv"  # Change to ML output path for team integration
+RULE_FLAGS_FILE = "rule_flags.csv"  # For real team data use ../../data/processed/rule_flags.csv
 AI_MODE = "groq"                       # "groq" for live AI; "template" for offline testing
 MODEL = "openai/gpt-oss-20b"
-MAX_REAL_AI_REPORTS = None             # None = every incident; 2 = first two only
+MAX_REAL_AI_REPORTS = 5                # New live reports PER RUN; None = all incidents
+AI_REQUEST_DELAY_SECONDS = 12           # Space API requests to avoid 8K tokens/min limit
+MAX_RATE_LIMIT_RETRIES = 1              # Retry once after a 429, then use a template
 OUTPUT_FOLDER = "outputs"
 
 # Paths work even if you start Python from another directory.
@@ -92,6 +96,115 @@ def load_ml_data(filename):
     return df
 
 
+def load_rule_flags(filename):
+    """Read Hogan's employee-day rules (one row per triggered rule).
+
+    Expected columns: employee_id, timestamp, rule_name, severity.
+    Optional 'flagged' column can mark inactive rows as False.
+    Hogan's flag generator uses these four required fields. Extra columns are accepted.
+    """
+    flags = pd.read_csv(filename)
+
+    # A completely empty CSV with headers is valid (no triggered rules).
+    required = ["employee_id", "timestamp", "rule_name", "severity"]
+    missing = [name for name in required if name not in flags.columns]
+    if missing:
+        raise ValueError(
+            f"rule_flags.csv needs columns {required}; missing {missing}. "
+            f"Actual columns: {list(flags.columns)}. "
+            "Confirm Hogan's CSV schema before integrating."
+        )
+
+    if flags.empty:
+        return pd.DataFrame(columns=["employee_id", "timestamp", "rule_flags", "rule_severity", "has_rule_flag"])
+
+    if flags[required].isna().any().any():
+        raise ValueError("rule_flags.csv has missing employee, timestamp, rule name or severity.")
+
+    # Filter out rows where a rule did NOT trigger, if Hogan exports those too.
+    if "flagged" in flags.columns:
+        values = flags["flagged"].astype(str).str.strip().str.lower()
+        if not values.isin(["true", "false", "1", "0"]).all():
+            raise ValueError("The 'flagged' column must contain True/False or 1/0.")
+        flags = flags[values.isin(["true", "1"])].copy()
+
+    if flags.empty:
+        return pd.DataFrame(columns=["employee_id", "timestamp", "rule_flags", "rule_severity", "has_rule_flag"])
+
+    dates = pd.to_datetime(flags["timestamp"], errors="coerce")
+    if dates.isna().any():
+        raise ValueError("Invalid rule-flag timestamps.")
+    flags["timestamp"] = dates.dt.strftime("%Y-%m-%d")
+    flags["employee_id"] = flags["employee_id"].astype(str).str.strip()
+    flags["rule_name"] = flags["rule_name"].astype(str).str.strip()
+    if (flags["employee_id"] == "").any() or (flags["rule_name"] == "").any():
+        raise ValueError("Blank employee IDs or rule names in rule_flags.csv.")
+
+    # Keep severity explicit, rather than silently guessing from a rule name.
+    severity_map = {"low": "Low", "medium": "Medium", "high": "High", "critical": "High"}
+    flags["severity"] = flags["severity"].astype(str).str.strip().str.lower().map(severity_map)
+    if flags["severity"].isna().any():
+        raise ValueError("Unknown rule severity. Expected Low, Medium, High, or Critical.")
+
+    ranks = {"Low": 1, "Medium": 2, "High": 3}
+    flags["rank"] = flags["severity"].map(ranks)
+
+    # Multiple rules for one employee/day become ONE joined employee-day.
+    grouped = flags.groupby(["employee_id", "timestamp"], as_index=False).agg(
+        rule_flags=("rule_name", lambda values: "; ".join(sorted(set(values)))),
+        max_rule_rank=("rank", "max"),
+    )
+    grouped["rule_severity"] = grouped["max_rule_rank"].map({1: "Low", 2: "Medium", 3: "High"})
+    grouped["has_rule_flag"] = True
+    return grouped.drop(columns=["max_rule_rank"])
+
+
+def combine_rule_flags(scored, rule_flags):
+    """Apply detection-rule severities without dropping ML employee-days."""
+    scored = scored.copy()
+    if rule_flags is None or rule_flags.empty:
+        scored["heuristic_score"] = scored["risk_score"]
+        scored["rule_flags"] = ""
+        scored["rule_severity"] = ""
+        scored["has_rule_flag"] = False
+        return scored
+
+    # An unmatched flagged day is a data contract problem. Never silently drop it.
+    matching = rule_flags.merge(
+        scored[["employee_id", "timestamp"]],
+        on=["employee_id", "timestamp"], how="left", indicator=True,
+    )
+    unmatched = matching[matching["_merge"] == "left_only"]
+    if not unmatched.empty:
+        examples = unmatched[["employee_id", "timestamp"]].head(5).to_dict("records")
+        raise ValueError(f"Rule-flag employee-days missing from ML output: {examples}")
+
+    scored = scored.merge(rule_flags, on=["employee_id", "timestamp"], how="left", validate="one_to_one")
+    scored["rule_flags"] = scored["rule_flags"].fillna("")
+    scored["rule_severity"] = scored["rule_severity"].fillna("")
+    scored["has_rule_flag"] = scored["has_rule_flag"].map(
+        lambda value: False if pd.isna(value) else bool(value)
+    )
+    scored["heuristic_score"] = scored["risk_score"]
+
+    # Minimum numeric score corresponding to Hogan's categorical severity.
+    severity_floor = {"": 0, "Low": 0, "Medium": 40, "High": 70}
+    scored["risk_score"] = scored.apply(
+        lambda row: max(int(row["heuristic_score"]), severity_floor[row["rule_severity"]]), axis=1
+    )
+    scored["severity"] = scored["risk_score"].apply(
+        lambda points: "High" if points >= 70 else "Medium" if points >= 40 else "Low"
+    )
+
+    # Show both source types to your teammates and the dashboard.
+    for index, row in scored.iterrows():
+        if row["rule_flags"]:
+            rule_text = "Hogan rules: " + row["rule_flags"]
+            old = row["triggered_rules"]
+            scored.at[index, "triggered_rules"] = (old + "; " + rule_text) if old else rule_text
+    return scored
+
+
 def calculate_risk(row):
     """Calculate one employee-day risk score using clear security rules."""
     points = 0
@@ -145,16 +258,20 @@ def calculate_risk(row):
     })
 
 
-def score_and_find_incidents(df):
+def score_and_find_incidents(df, rule_flags=None):
     """Score all records; keep important alerts as incidents."""
     scores = df.apply(calculate_risk, axis=1)
     scored = pd.concat([df.reset_index(drop=True), scores.reset_index(drop=True)], axis=1)
 
-    # Important: Don't lose brute-force alerts just because their score is <40.
+    # If Hogan's rules were provided, join by employee_id AND calendar day.
+    scored = combine_rule_flags(scored, rule_flags)
+
+    # Every rule-flagged employee-day becomes an incident.
     incidents = scored[
         (scored["risk_score"] >= 40)
         | (scored["anomaly_flag"])
         | (scored["failed_logins"] >= 10)
+        | (scored["has_rule_flag"])
     ].copy()
     incidents = incidents.sort_values(["timestamp", "employee_id"]).reset_index(drop=True)
     incidents.insert(0, "incident_id", [
@@ -181,7 +298,9 @@ def evidence_text(row):
         f"uploaded: {format_bytes(row['bytes_uploaded'])}; "
         f"downloaded: {format_bytes(row['bytes_downloaded'])}; "
         f"off-hours file events: {int(row['off_hours_file_events'])}; "
-        f"ML anomaly flag: {bool(row['anomaly_flag'])}."
+        f"ML anomaly flag: {bool(row['anomaly_flag'])}; "
+        f"source detection rules: {row.get('rule_flags', '') or 'none'}; "
+        f"rule severity: {row.get('rule_severity', '') or 'none'}."
     )
 
 
@@ -197,7 +316,8 @@ def report_basics(row):
         "key_evidence": evidence_text(row),
         "limitations": (
             "Daily aggregated activity does not establish exact event times, "
-            "whether a country/device is new, employee intent, or a confirmed attack."
+            "whether a country/device is new, employee intent, or a confirmed attack. "
+            "Rule detections are alerts, not proof of malicious activity."
         ),
     }
 
@@ -231,6 +351,10 @@ SCENARIO_DESCRIPTIONS = {
         "Unusual authentication activity was observed. "
         "The daily data cannot confirm the cause."
     ),
+    "authentication_attack_target": (
+        "Possible suspicious authentication attempts targeting this account. "
+        "This does not mean the employee initiated the attempts or that compromise occurred."
+    ),
     "ml_anomaly_only": (
         "The ML model marked this employee-day as unusual, "
         "but the available security indicators do not establish a specific attack."
@@ -254,6 +378,18 @@ def allowed_scenarios(row):
     if (row["off_hours_logins"] >= 3 or row["unique_countries"] >= 2
             or row["unique_devices"] >= 3):
         allowed.append("unusual_login")
+
+    # Person 1's detection rules can support scenario options even when
+    # daily feature thresholds are not crossed. They remain unconfirmed alerts.
+    rule_text = str(row.get("rule_flags", "")).lower()
+    if any(word in rule_text for word in ["usb", "exfil", "download", "transfer", "bulk"]):
+        if "file_transfer" not in allowed:
+            allowed.append("file_transfer")
+    if any(word in rule_text for word in ["travel", "foreign", "country", "device", "location"]):
+        if "unusual_login" not in allowed:
+            allowed.append("unusual_login")
+    if any(word in rule_text for word in ["credential", "stuffing", "brute", "password"]):
+        allowed.append("authentication_attack_target")
 
     if row["anomaly_flag"]:
         allowed.append("ml_anomaly_only")
@@ -326,6 +462,56 @@ def groq_report(row, client):
     return report
 
 
+
+def save_reports(reports, folder):
+    """Save after each incident so stopping early does not lose AI reports."""
+    pd.DataFrame(reports, columns=REPORT_COLUMNS).to_csv(
+        folder / "ai_investigations.csv", index=False
+    )
+
+
+def existing_groq_reports(folder):
+    """Reuse successful Groq reports from a previous run on the SAME input."""
+    file = folder / "ai_investigations.csv"
+    if not file.exists():
+        return {}
+
+    old = pd.read_csv(file).fillna("")
+    if not set(REPORT_COLUMNS).issubset(old.columns):
+        return {}
+    return {
+        str(row["incident_id"]): row.to_dict()
+        for _, row in old.iterrows()
+        if row["method"] == "groq"
+    }
+
+
+def groq_with_retry(row, client):
+    """Retry a temporary Groq 429 once; don't hang on repeated limits."""
+    for attempt in range(MAX_RATE_LIMIT_RETRIES + 1):
+        try:
+            return groq_report(row, client)
+        except Exception as error:
+            if getattr(error, "status_code", None) != 429 or attempt == MAX_RATE_LIMIT_RETRIES:
+                raise
+
+            response = getattr(error, "response", None)
+            headers = getattr(response, "headers", {}) or {}
+            try:
+                retry_after = float(headers.get("retry-after", 15))
+            except (ValueError, TypeError):
+                retry_after = 15
+
+            # Daily quotas may require long waits. Leave those for a future run.
+            if retry_after > 30:
+                raise
+
+            delay = max(3, retry_after + 2)
+            print(f"Groq rate limit reached. Retrying in {delay:.1f} seconds...", flush=True)
+            time.sleep(delay)
+
+
+
 def main():
     if AI_MODE not in ["template", "groq"]:
         raise ValueError("AI_MODE must be 'template' or 'groq'.")
@@ -333,10 +519,19 @@ def main():
     # 1. Read Person 2's results.
     df = load_ml_data(PROJECT_FOLDER / INPUT_FILE)
 
-    # 2. Score activities and create incidents.
-    scored, incidents = score_and_find_incidents(df)
+    # 2. Load Person 1's rule detections and join by employee/day.
+    rule_flags = load_rule_flags(PROJECT_FOLDER / RULE_FLAGS_FILE)
+    scored, incidents = score_and_find_incidents(df, rule_flags)
 
-    # 3. Set up the Groq API only if requested.
+    # 3. Save the risk and incident CSVs BEFORE calling the API.
+    folder = PROJECT_FOLDER / OUTPUT_FOLDER
+    folder.mkdir(parents=True, exist_ok=True)
+    scored.to_csv(folder / "risk_scores.csv", index=False)
+    incidents.to_csv(folder / "incidents.csv", index=False)
+
+    # Reuse verified successful Groq reports when rerunning the same dataset.
+    previous = existing_groq_reports(folder)
+
     client = None
     if AI_MODE == "groq" and not incidents.empty:
         from dotenv import load_dotenv
@@ -345,40 +540,69 @@ def main():
         load_dotenv(PROJECT_FOLDER / ".env")
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
-            raise ValueError("Missing GROQ_API_KEY. Add it to a .env file beside person3.py.")
+            raise ValueError("Missing GROQ_API_KEY. Put it in the .env file beside Risk_genAI.py.")
+        # Disable hidden SDK retries: our code will handle short 429s explicitly.
         client = OpenAI(
             api_key=api_key,
             base_url="https://api.groq.com/openai/v1",
+            max_retries=0,
+            timeout=45.0,
         )
 
-    # 4. Generate a report for each incident.
+    # 4. Generate investigations in manageable batches.
     reports = []
-    for i, row in incidents.iterrows():
-        use_groq = client is not None and (
-            MAX_REAL_AI_REPORTS is None or i < MAX_REAL_AI_REPORTS
-        )
-        if use_groq:
-            try:
-                report = groq_report(row, client)
-            except Exception as error:
-                print(f"WARNING: Groq failed for {row['incident_id']}: {error}")
-                report = template_report(row)
-                report["method"] = "template_fallback"
+    new_requests = 0
+    last_request_time = None
+    quota_reached = False
+
+   # Investigate the highest-risk incidents first
+    priority_incidents = incidents.sort_values(
+     ["risk_score", "timestamp"],
+        ascending=[False, True]
+    ).reset_index(drop=True)
+
+    for i, row in priority_incidents.iterrows():
+        incident_id = str(row["incident_id"])
+        facts = report_basics(row)
+        old = previous.get(incident_id)
+
+        # Reuse only if the source evidence and final risk summary are identical.
+        if old and old["summary"] == facts["summary"] and old["key_evidence"] == facts["key_evidence"]:
+            report = {key: old[key] for key in REPORT_COLUMNS if key != "incident_id"}
         else:
-            report = template_report(row)
-            if client is not None:
-                report["method"] = "template_limit"
+            can_call_groq = (
+                client is not None
+                and not quota_reached
+                and (MAX_REAL_AI_REPORTS is None or new_requests < MAX_REAL_AI_REPORTS)
+            )
+            if can_call_groq:
+                # Allow a pause between requests to stay under Groq's free TPM.
+                if last_request_time is not None:
+                    elapsed = time.monotonic() - last_request_time
+                    pause = max(0, AI_REQUEST_DELAY_SECONDS - elapsed)
+                    if pause > 0:
+                        time.sleep(pause)
 
-        reports.append({"incident_id": row["incident_id"], **report})
+                new_requests += 1
+                last_request_time = time.monotonic()
+                try:
+                    report = groq_with_retry(row, client)
+                except Exception as error:
+                    print(f"WARNING: Groq failed for {incident_id}: {error}", flush=True)
+                    report = template_report(row)
+                    report["method"] = "template_fallback"
+                    if getattr(error, "status_code", None) == 429:
+                        quota_reached = True  # Don't hammer the API for every remaining incident.
+            else:
+                report = template_report(row)
+                if client is not None:
+                    report["method"] = "template_rate_limit" if quota_reached else "template_limit"
 
-    # 5. Save the three CSV outputs for Person 4.
-    folder = PROJECT_FOLDER / OUTPUT_FOLDER
-    folder.mkdir(exist_ok=True)
-    scored.to_csv(folder / "risk_scores.csv", index=False)
-    incidents.to_csv(folder / "incidents.csv", index=False)
-    pd.DataFrame(reports, columns=REPORT_COLUMNS).to_csv(
-        folder / "ai_investigations.csv", index=False
-    )
+        reports.append({"incident_id": incident_id, **report})
+        save_reports(reports, folder)  # Checkpoint every report; safe to stop with Ctrl+C.
+
+        if (i + 1) % 25 == 0 or report["method"] == "groq" or i + 1 == len(incidents):
+            print(f"[{i + 1}/{len(incidents)}] {incident_id}: {report['method']}", flush=True)
 
     print("Finished!")
     print("Employee-days:", len(scored))
@@ -388,7 +612,10 @@ def main():
     if reports:
         print("Report methods:", pd.DataFrame(reports)["method"].value_counts().to_dict())
     if not incidents.empty:
-        print(incidents[["incident_id", "employee_id", "risk_score", "severity"]].to_string(index=False))
+        print("First 15 incidents:")
+        print(incidents[["incident_id", "employee_id", "risk_score", "severity"]].head(15).to_string(index=False))
+        if len(incidents) > 15:
+            print(f"... and {len(incidents) - 15} more incidents in incidents.csv")
 
 
 if __name__ == "__main__":
