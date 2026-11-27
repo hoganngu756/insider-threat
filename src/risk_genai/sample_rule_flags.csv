@@ -1,0 +1,5 @@
+employee_id,timestamp,rule_name,severity
+E001,2026-11-20 12:00:00,impossible_travel,High
+E006,2026-11-21 10:40:00,bulk_download,High
+E006,2026-11-21 12:15:00,usb_exfiltration,High
+E003,2026-11-20 20:30:00,bulk_download,Medium
