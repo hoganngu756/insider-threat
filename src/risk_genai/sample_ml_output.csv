@@ -1,0 +1,8 @@
+employee_id,timestamp,total_logins,failed_logins,off_hours_logins,unique_devices,unique_countries,file_uploads,file_downloads,bytes_uploaded,bytes_downloaded,external_transfers,bytes_external,off_hours_file_events,anomaly_score,anomaly_flag
+E001,2026-11-20,7,0,0,1,1,1,2,125000,640000,0,0,0,0.31,False
+E002,2026-11-20,23,15,7,4,3,0,0,0,0,0,0,0,0.79,True
+E003,2026-11-20,4,0,0,1,1,8,15,125000000,87000000,6,110000000,8,0.84,True
+E004,2026-11-20,6,1,0,1,1,1,1,400000,280000,0,0,0,0.28,False
+E005,2026-11-21,13,11,0,1,1,0,0,0,0,0,0,0,0.40,False
+E006,2026-11-21,4,0,0,3,2,0,1,0,56000,0,0,0,0.58,False
+E007,2026-11-21,9,0,0,1,1,1,5,45000,450000,0,0,0,0.80,True
